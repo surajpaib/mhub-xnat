@@ -1,0 +1,71 @@
+{
+    "name": "mhub-xnat-total-segmentator",
+    "description": "Run TS on a Scan",
+    "label": "total_segmentator",
+    "info-url": "",
+    "version": "0.1",
+    "schema-version": "1.0",
+    "type": "docker",
+    "runtime": "nvidia",
+    "gpus": "all",
+    "image": "mhub_xnat_ts:1.0",
+    "command-line": "python3 /app/models/totalsegmentator/scripts/run.py",
+    "mounts": [
+        {
+            "name": "in",
+            "writable": "false",
+            "path": "/app/data/input_data"
+        },
+        {
+            "name": "out",
+            "writable": "true",
+            "path": "/app/data/output_data"
+        }
+    ],
+    "inputs": [],
+    "outputs": [
+        
+        {
+            "name": "output",
+            "description": "The TS seg",
+            "mount": "out",
+            "required": true
+        }
+    ],
+    "xnat": [
+        {
+            "name": "total_segmentator",
+            "description": "Run TS on a Scan",
+            "label": "total_segmentator",
+            "contexts": ["xnat:imageScanData"],
+            "external-inputs": [
+                {
+                    "name": "scan",
+                    "description": "Input scan",
+                    "type": "Scan",
+                    "required": true,
+                    "matcher": "'DICOM' in @.resources[*].label"
+                }
+            ],
+            "derived-inputs": [
+                {
+                    "name": "scan-dicoms",
+                    "description": "The dicom resource on the scan",
+                    "type": "Resource",
+                    "derived-from-wrapper-input": "scan",
+                    "provides-files-for-command-mount": "in",
+                    "matcher": "@.label == 'DICOM'"
+                }
+            ],
+            "output-handlers": [
+                {
+                    "name": "nrrd-resource",
+                    "accepts-command-output": "output",
+                    "as-a-child-of": "scan",
+                    "type": "Resource",
+                    "label": "SEG"
+                }
+            ]
+        }
+    ]
+}
