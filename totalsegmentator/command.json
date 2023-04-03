@@ -8,8 +8,8 @@
     "type": "docker",
     "runtime": "nvidia",
     "gpus": "all",
-    "image": "mhub_xnat_ts:1.0",
-    "command-line": "python3 /app/models/totalsegmentator/scripts/run.py",
+    "image": "mhub_xnat_ts:0.1",
+    "command-line": "/app/run.sh",
     "mounts": [
         {
             "name": "in",
@@ -24,11 +24,11 @@
     ],
     "inputs": [],
     "outputs": [
-        
         {
-            "name": "output",
-            "description": "The TS seg",
+            "name": "output_files",
+            "description": "The TS seg files",
             "mount": "out",
+            "path": "TotalSegmentator.seg.dcm",
             "required": true
         }
     ],
@@ -37,7 +37,7 @@
             "name": "total_segmentator",
             "description": "Run TS on a Scan",
             "label": "total_segmentator",
-            "contexts": ["xnat:imageScanData"],
+            "contexts": ["xnat:ctScanData"],
             "external-inputs": [
                 {
                     "name": "scan",
@@ -45,7 +45,9 @@
                     "type": "Scan",
                     "required": true,
                     "matcher": "'DICOM' in @.resources[*].label"
+
                 }
+        
             ],
             "derived-inputs": [
                 {
@@ -59,11 +61,11 @@
             ],
             "output-handlers": [
                 {
-                    "name": "nrrd-resource",
-                    "accepts-command-output": "output",
-                    "as-a-child-of": "scan",
+                    "name": "nrrd",
+                    "accepts-command-output": "output_files",
+                    "as-a-child-of-wrapper-input": "scan",
                     "type": "Resource",
-                    "label": "SEG"
+                    "label": "ts-Segmentation"
                 }
             ]
         }
